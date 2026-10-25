@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Network Visualization - P2P Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            color: #9fa8da;
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h2 {
+            color: #5e35b1;
+            border-bottom: 3px solid #5e35b1;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .network-diagram {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+            padding: 20px;
+        }
+        
+        .node {
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 180px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            position: relative;
+            border: 3px solid #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .node.active {
+            box-shadow: 0 8px 16px rgba(79, 195, 247, 0.6);
+            border-color: #ffd54f;
+        }
+        
+        .node.mining {
+            background: linear-gradient(135deg, #ff6f00 0%, #ffca28 100%);
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 111, 0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 111, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 111, 0, 0); }
+        }
+        
+        .node-number {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .node-info {
+            background: rgba(255,255,255,0.9);
+            padding: 8px;
+            border-radius: 5px;
+            color: #333;
+            font-size: 0.8em;
+        }
+        
+        .connection-line {
+            position: absolute;
+            background: rgba(255,255,255,0.6);
+            height: 2px;
+            transition: all 0.3s ease;
+            z-index: 0;
+        }
+        
+        .connection-line.active {
+            background: #ffd54f;
+            width: 100%;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #5e35b1;
+            color: white;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        
+        .security-section {
+            background: linear-gradient(135deg, #e53935 0%, #d32f2f 100%);
+            color: white;
+        }
+        
+        .security-section h2 {
+            border-color: white;
+        }
+        
+        .steps-list {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+        
+        .steps-list li {
+            position: relative;
+            padding-left: 50px;
+            margin-bottom: 15px;
+        }
+        
+        .steps-list li::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 35px;
+            height: 35px;
+            background: #5e35b1;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            padding: 20px;
+        }
+        
+        .command-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            margin: 15px 0;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .info-box h4 {
+            color: #1565c0;
+            margin-bottom: 8px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #5e35b1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Blockchain Network Visualization</h1>
+        <p class="subtitle">Advanced P2P Network with Real Blockchain Features</p>
+        
+        <!-- Slide 1: Title -->
+        <div class="card">
+            <h2>P2P Network Architecture</h2>
+            <p style="font-size: 1.1em; margin-bottom: 15px;">
+                This visualization shows how a blockchain network operates with multiple nodes communicating peer-to-peer!
+            </p>
+            
+            <div class="info-box">
+                <h4>🔍 What You're Looking At:</h4>
+                <ul style="margin-left: 20px; margin-top: 5px;">
+                    <li><strong>Blue Nodes:</strong> Individual blockchain nodes (computers)</li>
+                    <li><strong>Yellow Borders:</strong> Active/mining node</li>
+                    <li><strong>Connections:</strong> P2P communication channels</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Slide 2: Network Diagram -->
+        <div class="card">
+            <h2>🖥️ Live Network Visualization</h2>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="margin-bottom: 10px;"><strong>The network consists of:</strong></p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Node ID</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Chain Length</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Node_1</strong></td>
+                            <td>Fully Connected</td>
+                            <td>✅ Active</td>
+                            <td>Growing...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Node_2</strong></td>
+                            <td>Fully Connected</td>
+                            <td>✅ Active</td>
+                            <td>Growing...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Node_3</strong></td>
+                            <td>Fully Connected</td>
+                            <td>✅ Active</td>
+                            <td>Growing...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Node_4</strong></td>
+                            <td>Fully Connected</td>
+                            <td>✅ Active</td>
+                            <td>Growing...</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Node_5</strong></td>
+                            <td>Fully Connected</td>
+                            <td>✅ Active</td>
+                            <td>Growing...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <p style="text-align: center; color: #666;">
+                Each node maintains its own copy of the blockchain and communicates directly with all other nodes!
+            </p>
+        </div>
+        
+        <!-- Slide 3: How P2P Networking Works -->
+        <div class="card">
+            <h2>⚙️ How P2P Networking Works</h2>
+            
+            <ul class="steps-list">
+                <li><strong>Node Discovery:</strong> Each node finds and connects to other nodes in the network</li>
+                <li><strong>Transaction Broadcasting:</strong> When Alice sends a transaction, all nodes receive it instantly</li>
+                <li><strong>Mempool Sharing:</strong> Pending transactions are stored in a pool shared across nodes</li>
+                <li><strong>Block Mining:</strong> Any node can mine a block if they have computing power</li>
+                <li><strong>Block Propagation:</strong> When a block is found, it's broadcast to all nodes within ~1 second</li>
+                <li><strong>Chain Verification:</strong> Each node validates the new block and adds it to their chain</li>
+                <li><strong>Synchronization:</strong> If there are conflicting blocks, nodes sync to the longest valid chain</li>
+            </ul>
+        </div>
+        
+        <!-- Slide 4: Advanced Features -->
+        <div class="card">
+            <h2>🎯 Advanced Blockchain Features Demonstrated</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <strong>1. P2P Networking</strong>
+                    <p style="margin-top: 5px; font-size: 0.9em;">No central server - nodes communicate directly with each other</p>
+                </div>
+                
+                <div class="feature-card">
+                    <strong>2. Transaction Propagation</strong>
+                    <p style="margin-top: 5px; font-size: 0.9em;">Transactions spread across network in milliseconds</p>
+                </div>
+                
+                <div class="feature-card">
+                    <strong>3. Consensus Mechanism</strong>
+                    <p style="margin-top: 5px; font-size: 0.9em;">Proof-of-Work ensures all nodes agree on valid state</p>
+                </div>
+                
+                <div class="feature-card">
+                    <strong>4. Network Synchronization</strong>
+                    <p style="margin-top: 5px; font-size: 0.9em;">All nodes maintain identical copies of the blockchain</p>
+                </div>
+                
+                <div class="feature-card">
+                    <strong>5. Fork Resolution</strong>
+                    <p style="margin-top: 5px; font-size: 0.9em;">Network automatically resolves conflicting blocks</p>
+                </div>
+                
+                <div class="feature-card">
+                    <strong>6. Decentralization</strong>
+                    <p style="margin-top: 5px; font-size: 0.9em;">No single point of failure - truly distributed</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 5: Security -->
+        <div class="card security-section">
+            <h2>🛡️ Why This Architecture is Secure</h2>
+            
+            <ol style="margin-left: 20px; margin-top: 10px;">
+                <li><strong>Decentralized:</strong> No central server to attack - network survives even if some nodes fail</li>
+                <li><strong>Cryptographic Linking:</strong> Each block's hash depends on the previous one - tampering breaks the chain</li>
+                <li><strong>Proof-of-Work:</strong> Mining requires computational effort, making attacks expensive</li>
+                <li><strong>Consensus:</strong> Network only accepts blocks that meet difficulty requirements</li>
+                <li><strong>51% Protection:</strong> To attack the network, you'd need to control majority of computing power</li>
+            </ol>
+            
+            <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 8px;">
+                <strong>Real-World Comparison:</strong> This is how Bitcoin and Ethereum networks work! Your visualization shows the core principles that make blockchain revolutionary.
+            </div>
+        </div>
+        
+        <!-- Slide 6: Technical Details -->
+        <div class="card">
+            <h2>💻 Technical Implementation</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Python Class</th>
+                        <th>Functionality</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Node</strong></td>
+                        <td><code>Node</code></td>
+                        <td>Individual blockchain node with its own chain</td>
+                    </tr>
+                    <tr>
+                        <td><strong>BlockchainNetwork</strong></td>
+                        <td><code>BlockchainNetwork</code></td>
+                        <td>Manages multiple nodes and coordinates network</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Transaction Pool</strong></td>
+                        <td><code>transaction_pool</code></td>
+                        <td>Holds pending transactions until mined</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mempool</strong></td>
+                        <td><code>pending_transactions</code></td>
+                        <td>Transaction queue for each node</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Slide 7: How to Run -->
+        <div class="card" style="text-align: center;">
+            <h2>🚀 Try the Network Demo!</h2>
+            <p style="font-size: 1.1em; margin-top: 15px;">See P2P networking, transaction propagation, and block mining in action:</p>
+            <div class="command-box">
+                <code>python blockchain-project/network-demo/networked_blockchain.py</code>
+            </div>
+            
+            <p style="font-size: 0.9em; margin-top: 15px; color: #666;">
+                Run this command to see the advanced blockchain network simulation!
+            </p>
+        </div>
+        
+        <!-- Footer -->
+        <footer>
+            <p>📚 This demo demonstrates real blockchain architecture used in Bitcoin, Ethereum, and thousands of other projects!</p>
+            <p style="margin-top: 10px;">Thank you for exploring blockchain P2P networking! 🌐</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">The decentralized network shown here is the foundation of all cryptocurrency networks!</p>
+        </footer>
+    </div>
+
+    <script>
+        // No interactive button - instructions provided in card above
+        console.log("🌐 Blockchain Network Visualization loaded!");
+        console.log("📖 Read the README.md for details on network features");
+        console.log("🚀 Run 'python blockchain-project/network-demo/networked_blockchain.py' to see it in action!");
+    </script>
+</body>
+</html>
